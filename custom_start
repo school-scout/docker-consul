@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ ! $ACL_MASTER_TOKEN ]; then
+  echo Fatal: ACL_MASTER_TOKEN must be set
+  exit 1
+fi
+
+sed -i "s/<ACL_MASTER_TOKEN>/${ACL_MASTER_TOKEN}/" /config/acl.json
+
+exec /bin/start "$@"

@@ -6,15 +6,17 @@ function cleanup() {
 }
 trap cleanup 0
 
-docker run -d --name node1 -h node1 -e ACL_MASTER_TOKEN=test1234 schoolscout/consul -server -bootstrap-expect 3 -join localhost
+DOCKER_OPTS="-e ACL_MASTER_TOKEN=test1234 -e SERVICE_IGNORE=1 -v /var/run/docker.sock:/var/run/docker.sock"
+
+docker run -d --name node1 -h node1 $DOCKER_OPTS schoolscout/consul -server -bootstrap-expect 3 -join localhost
 join_ip="$(sudo docker inspect -f '{{.NetworkSettings.IPAddress}}' node1)"
 
-docker run -d --name node2 -h node2 -e ACL_MASTER_TOKEN=test1234 schoolscout/consul -server -bootstrap-expect 3 -join $join_ip
-docker run -d --name node3 -h node3 -e ACL_MASTER_TOKEN=test1234 schoolscout/consul -server -bootstrap-expect 3 -join $join_ip
+docker run -d --name node2 -h node2 $DOCKER_OPTS schoolscout/consul -server -bootstrap-expect 3 -join $join_ip
+docker run -d --name node3 -h node3 $DOCKER_OPTS schoolscout/consul -server -bootstrap-expect 3 -join $join_ip
 
 echo Cluster running.
 
 echo Running agent. Access it on http://localhost:8500
 echo Press CTRL-C to exit.
 
-docker run --rm -p 8400:8400 -p 8500:8500 -p 8600:53/udp --name node4 -h node4 -e ACL_MASTER_TOKEN=test1234 schoolscout/consul -join $join_ip
+docker run --rm -p 8400:8400 -p 8500:8500 -p 8600:53/udp --name node4 -h node4 $DOCKER_OPTS schoolscout/consul -advertise 172.17.42.1 -join $join_ip
